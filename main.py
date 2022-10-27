@@ -16,21 +16,34 @@ def update_time():
     root.after(1000, update_time)
 
 
+"""
+COUNTDOWN CODE IS HERE:
+"""
+
+
 class CountdownWindow:
     def __init__(self):
+        """
         # CREATE THE WINDOW ITSELF
+        """
         self.cd_root = Toplevel(root)
         self.cd_root.title('GT\'S COUNTDOWN')
         self.cd_root.geometry("480x380")
         self.cd_root.iconbitmap('my_clock.ico')
+        """
         # CREATE THE MAIN FRAME
+        """
         self.cd_frame = Frame(self.cd_root, bg='black')
         self.cd_frame.pack(fill=BOTH, expand=YES)
+        """
         # TITLE
+        """
         self.cd_title_label = Label(self.cd_frame, text="Countdown", font=('System', 50), fg='#00ff09', bg='black',
                                     width=10, pady=5)
         self.cd_title_label.pack(side=TOP)
+        """
         # DECORATION LINE
+        """
         self.cd_line_canvas = Canvas(self.cd_frame, highlightthickness=0, background='black', height=15)
         self.cd_line_canvas.create_line(0, 0, 500000, 0, width=5, fill='white')
         self.cd_line_canvas.pack(side=TOP, fill=X)
@@ -63,17 +76,20 @@ class CountdownWindow:
         self.cd_pause_button.pack(side=LEFT, padx=10)
         self.cd_stop_button.pack(side=RIGHT, padx=10)
         # BOOLEAN THAT REPRESENTS WHETHER OR NO THE COUNTDOWN SHOULD BE GOING
-        # FALSE = GOING
-        self.stop_loop = False
+        # TRUE = GOING
+        self.stop_loop = True
         self.pause_check = 1
+        self.cd_time = 0
 
     def start_thread(self):
-        t = threading.Thread(target=self.start_cd)
+        t = threading.Thread(target=self.start_cd, daemon=True)
         self.stop_loop = True
+        self.pause_check = 1
         t.start()
 
     def start_cd(self):
         self.stop_loop = True
+        self.pause_check = 1
         # WE SPLIT THE ENTRY BOX BY THE SEPARATOR ":" AND STORE THE VALUES IN A LIST
         hours, minutes, seconds = 0, 0, 0
         string_split = self.cd_time_entry.get().split(":")
@@ -101,16 +117,16 @@ class CountdownWindow:
         else:
             messagebox.showerror(title='Error', message='You didn\'t enter a valid time!')
             self.stop_loop = False
-        cd_time = hours * 3600 + minutes * 60 + seconds
-        while cd_time > 0 and self.stop_loop:
+        self.cd_time = hours * 3600 + minutes * 60 + seconds
+        while self.cd_time > 0 and self.stop_loop:
             # DIVMOD -> RETURNS THE QUOTIENT AND THE REMAINDER OF A DIVISION ( NUMERATOR, DENOMINATOR
-            minutes, seconds = divmod(cd_time, 60)
+            minutes, seconds = divmod(self.cd_time, 60)
             hours, minutes = divmod(minutes, 60)
             # FORMATS THE TIME LABEL TO BE 00:00 EVEN IF THERE ARE ONLY SECONDS LEFT
             self.cd_time_label.config(text=f"Time: {hours:02d}:{minutes:02d}:{seconds:02d}")
             self.cd_root.update()
             time.sleep(1)
-            cd_time -= 1
+            self.cd_time -= 1
             while self.pause_check == -1:
                 time.sleep(1)
                 self.cd_root.update()
@@ -123,6 +139,7 @@ class CountdownWindow:
 
     def stop(self):
         self.stop_loop = False
+        self.cd_time = 0
         self.cd_time_label.config(text="Time: 00:00:00")
         self.cd_time_entry.delete(0, END)
 
@@ -130,34 +147,44 @@ class CountdownWindow:
         self.pause_check = -self.pause_check
 
 
+"""
+STOPWATCH CODE IS HERE:
+"""
+
+
 class StopwatchWindow:
     def __init__(self):
+        """
         # CREATE THE WINDOW ITSELF
+        """
         self.sw_root = Toplevel(root)
         self.sw_root.title('GT\'S COUNTDOWN')
         self.sw_root.geometry("480x380")
         self.sw_root.iconbitmap('my_clock.ico')
+        """
         # CREATE THE MAIN FRAME
+        """
         self.sw_frame = Frame(self.sw_root, bg='black')
         self.sw_frame.pack(fill=BOTH, expand=YES)
+        """ 
         # TITLE
+        """
         self.sw_title_label = Label(self.sw_frame, text="Stopwatch", font=('System', 50), fg='#fff130', bg='black',
                                     width=10, pady=5)
         self.sw_title_label.pack(side=TOP)
+        """
         # DECORATION LINE
+        """
         self.sw_line_canvas = Canvas(self.sw_frame, highlightthickness=0, background='black', height=15)
         self.sw_line_canvas.create_line(0, 0, 500000, 0, width=5, fill='white')
         self.sw_line_canvas.pack(side=TOP, fill=X)
-        # TIME CHECKER
-        self.sw_stop_timer = 1
-        # TIMER
-        """self.sw_hours = 0
-        self.sw_minutes = 0
-        self.sw_seconds = 0
-        self.sw_text = f"{self.sw_hours:02d}:{self.sw_minutes:02d}:{self.sw_seconds:02d}"
         """
-
+        # TIME CHECKER
+        """
+        self.sw_stop_timer = 1
+        """
         # TIME LABEL
+        """
         self.border_color_1 = Frame(self.sw_frame, bg='#fff130', border=5)
         self.border_color_1.pack()
         self.sw_time_label = Label(self.border_color_1, background='black', fg='#fff130', text='00:00:00',
@@ -178,30 +205,22 @@ class StopwatchWindow:
 
     def start_sw_thread(self):
         self.stop_sw()
-        t = threading.Thread(target=self.start_sw())
+        self.pause = 1
+        t = threading.Thread(target=self.start_sw(), daemon=True)
         t.start()
 
     def start_sw(self):
         self.sw_stop_timer = 1
-        """sw_time_h = int(datetime.datetime.now().hour)
-        sw_time_m = int(datetime.datetime.now().minute)
-        sw_time_s = int(datetime.datetime.now().second)
-        sw_time = 3600 * sw_time_h + 60 * sw_time_m + sw_time_s
-        I'm not using this method anymore; I used this before implementing the Pause option."""
+        self.pause = 1
         sw_h = 0
         sw_m = 0
         sw_s = 0
         time.sleep(1)
         # print(sw_time_s)
         while self.sw_stop_timer == 1:
-            """sw_time_up_h = int(datetime.datetime.now().hour)
-            sw_time_up_m = int(datetime.datetime.now().minute)
-            sw_time_up_s = int(datetime.datetime.now().second)
-            sw_time_up = 3600 * sw_time_up_h + 60 * sw_time_up_m + sw_time_up_s
-            timer = sw_time_up - sw_time
-            sw_m, sw_s = divmod(timer, 60)
-            sw_h, sw_m = divmod(sw_m, 60)
-            I'm not using this method anymore; I used this before implementing the Pause option."""
+            while self.pause == -1:
+                time.sleep(1)
+                self.sw_root.update()
             sw_s += 1
             timer = sw_s + 60 * sw_m + 3600 * sw_h
             sw_m, sw_s = divmod(timer, 60)
@@ -209,16 +228,6 @@ class StopwatchWindow:
             self.sw_time_label.config(
                 text=f"{sw_h:02d}:{sw_m:02d}:{sw_s:02d}")
             self.sw_root.update()
-            """if self.pause == -1:
-                sw_time_h = int(datetime.datetime.now().hour)
-                sw_time_m = int(datetime.datetime.now().minute)
-                sw_time_s = int(datetime.datetime.now().second)
-                sw_time = 3600 * sw_time_h + 60 * sw_time_m + sw_time_s
-                self.sw_root.update()
-                I'm not using this method anymore; I tried to use this method for the Pause option but it didn't work"""
-            while self.pause == -1:
-                time.sleep(1)
-                self.sw_root.update()
             time.sleep(1)
 
     def pause_sw(self):
@@ -238,7 +247,9 @@ root.geometry("480x380")
 root.iconbitmap('my_clock.ico')
 root.config(bg='black')
 
-# clock-frame start
+"""
+# CLOCK-FRAME
+"""
 clock_frame = Frame(root, bg='black')
 clock_frame.pack(fill=BOTH, expand=True)
 
@@ -270,3 +281,25 @@ made_by_label.pack(side=BOTTOM)
 update_time()
 
 root.mainloop()
+
+# another way to implement stopwatch
+"""sw_time_up_h = int(datetime.datetime.now().hour)
+            sw_time_up_m = int(datetime.datetime.now().minute)
+            sw_time_up_s = int(datetime.datetime.now().second)
+            sw_time_up = 3600 * sw_time_up_h + 60 * sw_time_up_m + sw_time_up_s
+            timer = sw_time_up - sw_time
+            sw_m, sw_s = divmod(timer, 60)
+            sw_h, sw_m = divmod(sw_m, 60)
+            I'm not using this method anymore; I used this before implementing the Pause option."""
+"""sw_time_h = int(datetime.datetime.now().hour)
+sw_time_m = int(datetime.datetime.now().minute)
+sw_time_s = int(datetime.datetime.now().second)
+sw_time = 3600 * sw_time_h + 60 * sw_time_m + sw_time_s
+I'm not using this method anymore; I used this before implementing the Pause option."""
+"""if self.pause == -1:
+    sw_time_h = int(datetime.datetime.now().hour)
+    sw_time_m = int(datetime.datetime.now().minute)
+    sw_time_s = int(datetime.datetime.now().second)
+    sw_time = 3600 * sw_time_h + 60 * sw_time_m + sw_time_s
+    self.sw_root.update()
+    I'm not using this method anymore; I tried to use this method for the Pause option but it didn't work"""
